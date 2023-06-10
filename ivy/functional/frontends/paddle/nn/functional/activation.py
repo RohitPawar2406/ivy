@@ -123,3 +123,31 @@ def celu(
     prod = alpha * (ivy.exp(x / alpha) - 1)
     ret = ivy.maximum(0, x) + ivy.minimum(0, prod)
     return ret
+
+
+@with_supported_dtypes({"2.4.2 and below": ("float32", "float64")}, "paddle")
+@to_ivy_arrays_and_back
+def gumbel_softmax(
+    *,
+    x,
+    temperature=1.0,
+    hard=False,
+    eps=1e-20,
+    axis=-1,
+    name=None,
+):
+    noise_to_add = ivy.random_uniform(0, 1, shape=x.shape)
+    -ivy.log(-ivy.log(noise_to_add + eps) + eps)
+    # gumbel_softmax_sample = ivy.softmax((x + sample_gumbel) / temperature, axis=axis)
+
+    gumbels = -ivy.empty_like(x).exp().log()
+    gumbels = (x + gumbels) / temperature
+    y_soft = ivy.softmax(gumbels, axis=axis)
+
+    if hard:
+        index = ivy.max(y_soft, axis=axis, keepdims=True)
+        index = index[1]
+        y_hard = ivy.zeros_like(x)
+        y_hard = ivy.scatter_nd(
+            y_hard,
+        )
